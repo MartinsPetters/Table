@@ -418,6 +418,10 @@ function Table({ columns: userColumns, data }) {
 																	className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
 																/>
 															</div>
+															<div
+																{...column.getResizerProps()}
+																className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+															/>
 														</div>
 													);
 												}}
@@ -467,7 +471,7 @@ function App() {
 				// Build our expander column
 				id: 'expander', // Make sure it has an ID
 				Header: ({ getToggleAllRowsExpandedProps, isAllRowsExpanded }) => (
-					<span {...getToggleAllRowsExpandedProps()}>{isAllRowsExpanded ? '👇' : '👉'}</span>
+					<span {...getToggleAllRowsExpandedProps()}>{isAllRowsExpanded ? '➖' : '➕'}</span>
 				),
 				disableFilters: true,
 				Cell: ({ row }) => {
@@ -485,7 +489,7 @@ function App() {
 								},
 							})}
 						>
-							{row.isExpanded ? '👇' : '👉'}
+							{row.isExpanded ? '➖' : '➕'}
 						</span>
 					) : null;
 				},
