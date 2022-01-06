@@ -11,6 +11,7 @@
     "flatted": "^3.2.4",
     "namor": "^1.1.2",
     "react": "^16.8.6",
+    "react-beautiful-dnd": "^13.1.0",
     "react-dom": "^16.8.6",
     "react-json-view": "^1.21.3",
     "react-scripts": "3.0.1",
