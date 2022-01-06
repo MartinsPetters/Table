@@ -19,15 +19,13 @@ import makeData from './makeData';
 const Styles = styled.div`
 	padding: 1rem;
 
-	padding: 1rem;
-
 	* {
 		box-sizing: border-box;
 	}
 
 	.table {
 		border: 1px solid #000;
-		max-width: 700px;
+		max-width: 1200px;
 		overflow-x: auto;
 	}
 
@@ -52,55 +50,33 @@ const Styles = styled.div`
 
 	.cell {
 		height: 100%;
-		line-height: 31px;
+		line-height: 30px;
 		border-right: 1px solid #000;
-		/* padding-left: 5px; */
+		padding-left: 5px;
 
 		:last-child {
 			border: 0;
 		}
+		.resizer {
+			display: inline-block;
+			background: blue;
+			width: 10px;
+			height: 100%;
+			position: absolute;
+			right: 0;
+			top: 0;
+			transform: translateX(50%);
+			z-index: 1;
+			${'' /* prevents from scrolling while dragging on touch devices */}
+			touch-action:none;
+
+			&.isResizing {
+				background: red;
+			}
+		}
 	}
-
-	table {
-		border-spacing: 0;
-		border: 1px solid black;
-
-		tr {
-			:last-child {
-				td {
-					border-bottom: 0;
-				}
-			}
-		}
-
-		th,
-		td {
-			margin: 0;
-			padding: 0.5rem;
-			border-bottom: 1px solid black;
-			border-right: 1px solid black;
-
-			:last-child {
-				border-right: 0;
-			}
-			.resizer {
-				display: inline-block;
-				background: blue;
-				width: 10px;
-				height: 100%;
-				position: absolute;
-				right: 0;
-				top: 0;
-				transform: translateX(50%);
-				z-index: 1;
-				${'' /* prevents from scrolling while dragging on touch devices */}
-				touch-action:none;
-
-				&.isResizing {
-					background: red;
-				}
-			}
-		}
+	.header-group {
+		height: 100px;
 	}
 `;
 
@@ -273,9 +249,9 @@ const getItemStyle = ({ isDragging, isDropAnimating }, draggableStyle) => ({
 	...draggableStyle,
 	// some basic styles to make the items look a bit nicer
 	userSelect: 'none',
-
+	height: '99px',
 	// change background colour if dragging
-	background: isDragging ? 'lightgreen' : 'grey',
+	background: isDragging ? 'lightgreen' : 'white',
 
 	...(!isDragging && { transform: 'translate(0,0)' }),
 	...(isDropAnimating && { transitionDuration: '0.001s' }),
@@ -306,6 +282,7 @@ function Table({ columns: userColumns, data }) {
 		() => ({
 			// Let's set up our default Filter UI
 			Filter: DefaultColumnFilter,
+			width: 180,
 		}),
 		[]
 	);
@@ -332,7 +309,6 @@ function Table({ columns: userColumns, data }) {
 		getToggleHideAllColumnsProps,
 		headerGroups,
 		rows,
-		flatColumns,
 		setColumnOrder,
 		allColumns,
 		prepareRow,
@@ -342,12 +318,25 @@ function Table({ columns: userColumns, data }) {
 
 	return (
 		<>
+			<div>
+				<div>
+					<IndeterminateCheckbox {...getToggleHideAllColumnsProps()} /> Toggle All
+				</div>
+				{allColumns.map((column) => (
+					<div key={column.id}>
+						<label>
+							<input type="checkbox" {...column.getToggleHiddenProps()} /> {column.Header}
+						</label>
+					</div>
+				))}
+				<br />
+			</div>
 			<div {...getTableProps()} className="table">
 				<div>
 					{headerGroups.map((headerGroup) => (
 						<DragDropContext
 							onDragStart={() => {
-								currentColOrder.current = flatColumns.map((o) => o.id);
+								currentColOrder.current = allColumns.map((o) => o.id);
 							}}
 							onDragUpdate={(dragUpdateObj, b) => {
 								// console.log("onDragUpdate", dragUpdateObj, b);
@@ -395,7 +384,10 @@ function Table({ columns: userColumns, data }) {
 													// console.log(style, extraProps);
 
 													return (
-														<div {...column.getHeaderProps()} className="cell header">
+														<div
+															{...column.getHeaderProps({ style: { position: 'absolute' } })}
+															className="cell header"
+														>
 															<div
 																{...provided.draggableProps}
 																{...provided.dragHandleProps}
@@ -407,6 +399,24 @@ function Table({ columns: userColumns, data }) {
 																}}
 															>
 																{column.render('Header')}
+																<div {...column.getSortByToggleProps()}>
+																	{/* Add a sort direction indicator */}
+																	{column.canSort ? (
+																		<span>
+																			{column.isSorted
+																				? column.isSortedDesc
+																					? ' 🔽'
+																					: ' 🔼'
+																				: ' ⏹️'}
+																		</span>
+																	) : null}
+																</div>
+																{/* Render the columns filter UI */}
+																<div>{column.canFilter ? column.render('Filter') : null}</div>
+																<div
+																	{...column.getResizerProps()}
+																	className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+																/>
 															</div>
 														</div>
 													);
@@ -420,75 +430,22 @@ function Table({ columns: userColumns, data }) {
 						</DragDropContext>
 					))}
 				</div>
-
 				<div className="rows" {...getTableBodyProps()}>
-					{rows.map(
-						(row, i) =>
-							prepareRow(row) || (
-								<div {...row.getRowProps()} className="row body">
-									{row.cells.map((cell) => {
-										return (
-											<div {...cell.getCellProps()} className="cell">
-												{cell.render('Cell')}
-											</div>
-										);
-									})}
-								</div>
-							)
-					)}
-				</div>
-			</div>
-			<div>
-				<div>
-					<IndeterminateCheckbox {...getToggleHideAllColumnsProps()} /> Toggle All
-				</div>
-				{allColumns.map((column) => (
-					<div key={column.id}>
-						<label>
-							<input type="checkbox" {...column.getToggleHiddenProps()} /> {column.Header}
-						</label>
-					</div>
-				))}
-				<br />
-			</div>
-			<table {...getTableProps()}>
-				<thead>
-					{headerGroups.map((headerGroup) => (
-						<tr {...headerGroup.getHeaderGroupProps()}>
-							{headerGroup.headers.map((column) => (
-								// Add the sorting props to control sorting.
-								<th {...column.getHeaderProps()}>
-									{column.render('Header')}
-									<div {...column.getSortByToggleProps()}>
-										{/* Add a sort direction indicator */}
-										{column.canSort ? (
-											<span>{column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ' ⏹️'}</span>
-										) : null}
-									</div>
-									{/* Render the columns filter UI */}
-									<div>{column.canFilter ? column.render('Filter') : null}</div>
-									<div
-										{...column.getResizerProps()}
-										className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
-									/>
-								</th>
-							))}
-						</tr>
-					))}
-				</thead>
-				<tbody {...getTableBodyProps()}>
 					{rows.map((row, i) => {
 						prepareRow(row);
 						return (
-							<tr {...row.getRowProps()}>
-								{row.cells.map((cell) => {
-									return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
-								})}
-							</tr>
+							<div {...row.getRowProps()} className="row body">
+								{row.cells.map((cell, index) => (
+									<div {...cell.getCellProps()} key={index} className="cell">
+										{cell.render('Cell')}
+									</div>
+								))}
+							</div>
 						);
 					})}
-				</tbody>
-			</table>
+				</div>
+			</div>
+
 			<br />
 			<div>Showing the first 20 results of {rows.length} rows</div>
 			<pre>
