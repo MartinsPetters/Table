@@ -6,7 +6,6 @@ import {
 	useSortBy,
 	useFilters,
 	useResizeColumns,
-	useBlockLayout,
 	useColumnOrder,
 	useAbsoluteLayout,
 } from 'react-table';
@@ -158,6 +157,7 @@ function SliderColumnFilter({ column: { filterValue, setFilter, preFilteredRows,
 					setFilter(parseInt(e.target.value, 10));
 				}}
 			/>
+      {filterValue}
 			<button onClick={() => setFilter(undefined)}>Off</button>
 		</>
 	);
