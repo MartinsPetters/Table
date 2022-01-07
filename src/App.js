@@ -8,6 +8,8 @@ import {
 	useResizeColumns,
 	useColumnOrder,
 	useAbsoluteLayout,
+	usePagination,
+	useRowSelect,
 } from 'react-table';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import CircularJSON from 'circular-json';
@@ -157,7 +159,7 @@ function SliderColumnFilter({ column: { filterValue, setFilter, preFilteredRows,
 					setFilter(parseInt(e.target.value, 10));
 				}}
 			/>
-      {filterValue}
+			{filterValue}
 			<button onClick={() => setFilter(undefined)}>Off</button>
 		</>
 	);
@@ -300,7 +302,9 @@ function Table({ columns: userColumns, data }) {
 		useExpanded, // expand hook
 		useColumnOrder, //order
 		useAbsoluteLayout, //div table hook
-		useResizeColumns // resize hook
+		useResizeColumns, // resize hook
+		usePagination, // resize pagination
+		useRowSelect // select rows
 	);
 
 	const {
@@ -312,6 +316,16 @@ function Table({ columns: userColumns, data }) {
 		setColumnOrder,
 		allColumns,
 		prepareRow,
+    page, // Instead of using 'rows', we'll use page,
+    pageOptions,
+    setPageSize,
+		pageCount,
+		gotoPage,
+		canPreviousPage,
+		previousPage,
+		canNextPage,
+		nextPage,
+		state: { pageIndex, pageSize, selectedRowIds },
 	} = table;
 
 	const currentColOrder = React.useRef();
@@ -435,7 +449,7 @@ function Table({ columns: userColumns, data }) {
 					))}
 				</div>
 				<div className="rows" {...getTableBodyProps()}>
-					{rows.map((row, i) => {
+					{page.map((row, i) => {
 						prepareRow(row);
 						return (
 							<div {...row.getRowProps()} className="row body">
@@ -449,9 +463,51 @@ function Table({ columns: userColumns, data }) {
 					})}
 				</div>
 			</div>
-
 			<br />
-			<div>Showing the first 20 results of {rows.length} rows</div>
+			<div className="pagination">
+				<button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+					{'<<'}
+				</button>{' '}
+				<button onClick={() => previousPage()} disabled={!canPreviousPage}>
+					{'<'}
+				</button>{' '}
+				<button onClick={() => nextPage()} disabled={!canNextPage}>
+					{'>'}
+				</button>{' '}
+				<button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+					{'>>'}
+				</button>{' '}
+				<span>
+					Page{' '}
+					<strong>
+						{pageIndex + 1} of {pageOptions.length}
+					</strong>{' '}
+				</span>
+				<span>
+					| Go to page:{' '}
+					<input
+						type="number"
+						defaultValue={pageIndex + 1}
+						onChange={(e) => {
+							const page = e.target.value ? Number(e.target.value) - 1 : 0;
+							gotoPage(page);
+						}}
+						style={{ width: '100px' }}
+					/>
+				</span>{' '}
+				<select
+					value={pageSize}
+					onChange={(e) => {
+						setPageSize(Number(e.target.value));
+					}}
+				>
+					{[10, 20, 30, 40, 50].map((pageSize) => (
+						<option key={pageSize} value={pageSize}>
+							Show {pageSize}
+						</option>
+					))}
+				</select>
+			</div>
 			<pre>
 				<ReactJson
 					src={JSON.parse(CircularJSON.stringify({ table }))}
@@ -535,7 +591,7 @@ function App() {
 		[]
 	);
 
-	const data = React.useMemo(() => makeData(5, 3, 2), []);
+	const data = React.useMemo(() => makeData(100, 3, 2), []);
 
 	return (
 		<Styles>
