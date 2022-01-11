@@ -8,9 +8,13 @@ const range = len => {
   return arr
 }
 
+let index = 0
+
 const newPerson = () => {
+  index++
   const statusChance = Math.random()
   return {
+    index_: index,
     firstName: namor.generate({ words: 1, numbers: 0 }),
     lastName: namor.generate({ words: 1, numbers: 0 }),
     age: Math.floor(Math.random() * 30),

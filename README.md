@@ -5,3 +5,8 @@ Notes:
 * setIndex
 * dtaset
 * column dfinition
+
+
+
+GetRowExternalId
+GetRowExternalIndex
