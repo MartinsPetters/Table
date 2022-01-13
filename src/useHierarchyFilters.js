@@ -6,6 +6,8 @@ function isFunction(a) {
   }
 }
 
+const pluginName = 'useHierarchyFilters'
+
 export function getFilterMethod(filter, filterTypes) {
   return isFunction(filter) || filterTypes[filter] || filterTypes.text
 }
@@ -14,12 +16,15 @@ export const useHierarchyFilters = (hooks) => {
   hooks.useInstance.push(useInstance)
 }
 
+useHierarchyFilters.pluginName = pluginName
+
 function useInstance(instance) {
   const {
     rows,
     flatRows,
     rowsById,
     allColumns,
+    canFilter = () => true,
     filterTypes: userFilterTypes,
     state: { filters }
   } = instance
@@ -34,25 +39,27 @@ function useInstance(instance) {
         let idx = 0
         while (idx !== filteredRows.length) {
           const curentRow = filteredRows[idx]
-          const hide = filters.some(({ id: columnId, value: filterValue }) => {
-            const column = allColumns.find((d) => d.id === columnId)
-            if (!column) {
-              return false
-            }
-            const filterMethod = getFilterMethod(
-              column.filter,
-              userFilterTypes || {}
-            )
-            if (!filterMethod) {
-              console.warn(
-                `Could not find a valid 'column.filter' for column with the ID: ${column.id}.`
+          const hide =
+            canFilter(curentRow) &&
+            filters.some(({ id: columnId, value: filterValue }) => {
+              const column = allColumns.find((d) => d.id === columnId)
+              if (!column) {
+                return false
+              }
+              const filterMethod = getFilterMethod(
+                column.filter,
+                userFilterTypes || {}
               )
-              return false
-            }
-            const result = filterMethod([curentRow], [columnId], filterValue)
-            console.log('RESULT', result)
-            return !result.length
-          })
+              if (!filterMethod) {
+                console.warn(
+                  `Could not find a valid 'column.filter' for column with the ID: ${column.id}.`
+                )
+                return false
+              }
+              const result = filterMethod([curentRow], [columnId], filterValue)
+              console.log('RESULT', result)
+              return !result.length
+            })
           if (hide) {
             if (curentRow.subRows) {
               filteredRows = [
@@ -80,7 +87,7 @@ function useInstance(instance) {
       }
 
       return [filterRows(rows), filteredFlatRows, filteredRowsById]
-    }, [filters, rows, allColumns, userFilterTypes])
+    }, [filters, rows, allColumns, userFilterTypes, canFilter])
 
   React.useMemo(() => {
     // Now that each filtered column has it's partially filtered rows,

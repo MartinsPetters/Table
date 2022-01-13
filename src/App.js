@@ -9,7 +9,6 @@ import {
   useColumnOrder,
   useAbsoluteLayout,
   usePagination,
-  useRowSelect,
   emptyRenderer
 } from 'react-table'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
@@ -18,6 +17,8 @@ import ReactJson from 'react-json-view'
 
 import makeData from './makeData'
 import { useHierarchyFilters } from './useHierarchyFilters'
+import { useSimpleRowSelect } from './useSimpleRowSelect'
+import { useActiveRow } from './useActiveRow'
 
 const Styles = styled.div`
   padding: 1rem;
@@ -43,7 +44,9 @@ const Styles = styled.div`
   .row {
     border-bottom: 1px solid #000;
     height: 32px;
-
+    &.active {
+      background-color: aqua;
+    }
     &.body {
       :last-child {
         border: 0;
@@ -311,8 +314,26 @@ function Table({ columns: userColumns, data }) {
   )
 
   const getRowId = React.useCallback((row) => {
-    console.log(row)
-    return row['index_']
+    //console.log(row)
+    return row['id_']
+  }, [])
+
+  const canSelect = React.useCallback((row) => {
+    const { values } = row
+    if (values.firstName.indexOf('a') === -1) {
+      return false
+    }
+    return true
+  }, [])
+
+  const onSelect = React.useCallback((...props) => {
+    console.log('SELECT ROW', props)
+    return true
+  }, [])
+
+  const onActivate = React.useCallback((...props) => {
+    console.log('ACTIVATE ROW', props)
+    return true
   }, [])
 
   const table = useTable(
@@ -322,7 +343,11 @@ function Table({ columns: userColumns, data }) {
       defaultColumn,
       filterTypes,
       manualFilters: true,
-      //getRowId,
+      onSelect,
+      canSelect,
+      canFilter: canSelect,
+      onActivate,
+      getRowId,
       getSubRows: (row) => row.subRows,
       stateReducer: (newState, action, prevState) => {
         console.log('REDUCER', newState, action, prevState)
@@ -334,14 +359,15 @@ function Table({ columns: userColumns, data }) {
       }
     },
     useFilters, // filter hook
-    useHierarchyFilters,
     useSortBy, //sort hook
+    useHierarchyFilters,
     useExpanded, // expand hook
     useColumnOrder, //order
     useAbsoluteLayout, //div table hook
     useResizeColumns, // resize hook
-    usePagination, // resize pagination
-    useRowSelect, // select rows
+    usePagination, // pagination
+    useSimpleRowSelect, // select rows
+    useActiveRow, //active row
     (hooks) => {
       hooks.visibleColumns.push((columns) => [
         // Let's make a column for selection
@@ -349,9 +375,9 @@ function Table({ columns: userColumns, data }) {
           id: 'selection',
           // The header can use the table's getToggleAllRowsSelectedProps method
           // to render a checkbox
-          Header: ({ getToggleAllPageRowsSelectedProps }) => (
+          Header: ({ getToggleAllRowsSelectedProps }) => (
             <div>
-              <IndeterminateCheckbox {...getToggleAllPageRowsSelectedProps()} />
+              <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
             </div>
           ),
           // The cell can use the individual row's getToggleRowSelectedProps method
@@ -528,8 +554,18 @@ function Table({ columns: userColumns, data }) {
         <div className="rows" {...getTableBodyProps()}>
           {page.map((row, i) => {
             prepareRow(row)
+            console.log(
+              'ROW PROPS',
+              row,
+              row.getRowProps(),
+              row.getActiveRowProps()
+            )
             return (
-              <div {...row.getRowProps()} className="row body">
+              <div
+                {...row.getRowProps()}
+                {...row.getActiveRowProps()}
+                className={`row body ${row.isActive ? 'active' : ''}`}
+              >
                 {row.cells.map((cell, index) => (
                   <div {...cell.getCellProps()} key={index} className="cell">
                     {cell.render('Cell')}
@@ -610,7 +646,7 @@ function App() {
         ),
         disableFilters: true,
         Cell: ({ row }) => {
-          console.log('Expand', row, row.getToggleRowExpandedProps())
+          //console.log('Expand', row, row.getToggleRowExpandedProps())
           // Use the row.canExpand and row.getToggleRowExpandedProps prop getter
           // to build the toggle for expanding a row
           return row.canExpand ? (
@@ -631,8 +667,8 @@ function App() {
       },
 
       {
-        Header: 'idx',
-        accessor: 'index_'
+        Header: 'id_',
+        accessor: 'id_'
       },
       {
         Header: 'First Name',
@@ -674,7 +710,7 @@ function App() {
     []
   )
 
-  const data = React.useMemo(() => makeData(5, 3, 2), [])
+  const data = React.useMemo(() => makeData(30, 3, 2), [])
 
   return (
     <Styles>
