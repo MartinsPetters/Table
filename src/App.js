@@ -331,7 +331,7 @@ function Table({ columns: userColumns, data }) {
     return true
   }, [])
 
-  const onActivate = React.useCallback((...props) => {
+  const onChange = React.useCallback((...props) => {
     console.log('ACTIVATE ROW', props)
     return true
   }, [])
@@ -346,7 +346,7 @@ function Table({ columns: userColumns, data }) {
       onSelect,
       canSelect,
       canFilter: canSelect,
-      onActivate,
+      onChange,
       getRowId,
       getSubRows: (row) => row.subRows,
       stateReducer: (newState, action, prevState) => {
@@ -398,7 +398,7 @@ function Table({ columns: userColumns, data }) {
     getTableBodyProps,
     getToggleHideAllColumnsProps,
     headerGroups,
-    rows,
+    //rows,
     setColumnOrder,
     allColumns,
     prepareRow,
@@ -411,7 +411,7 @@ function Table({ columns: userColumns, data }) {
     previousPage,
     canNextPage,
     nextPage,
-    state: { pageIndex, pageSize, selectedRowIds }
+    state: { pageIndex, pageSize/*, selectedRowIds*/ }
   } = table
 
   const currentColOrder = React.useRef()

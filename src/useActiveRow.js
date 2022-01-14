@@ -37,24 +37,71 @@ function reducer(state, action, previousState, instance) {
   switch (action.type) {
     case actions.init: {
       return {
-        activeRowId: '',
+        activeRowIndex: -1,
         ...state
       }
     }
     case actions.resetActiveRow: {
       return {
         ...state,
-        activeRowId: instance.initialState.activeRowId || ''
+        activeRowIndex: instance.initialState.activeRowIndex || -1
       }
     }
     case actions.setActiveRow: {
-      const newId = action.id
-      const oldId = previousState.activeRowId
-      const id =
-        newId !== oldId && instance.onActivateRow(newId, oldId) ? newId : oldId
+      const newIndex = action.index
+      const oldIndex = previousState.activeRowIndex
+      const index =
+        newIndex !== oldIndex && instance.onChangeRow(oldIndex)
+          ? newIndex
+          : oldIndex
       return {
         ...state,
-        activeRowId: id
+        activeRowIndex: index
+      }
+    }
+    case actions.gotoPage: {
+      //cancel pagination if not allowed to change active row
+      const prevPageIndex = previousState.pageIndex
+      const newPageIndex = state.pageIndex
+      if (prevPageIndex === newPageIndex) {
+        return state
+      }
+      if (instance.onChangeRow(state.activeRowIndex)) {
+        return state
+      }
+      return {
+        ...state,
+        pageIndex: prevPageIndex
+      }
+    }
+    case actions.toggleSortBy: {
+      //cancel sort if not allowed to change active row
+      const prevSortBy = previousState.sortBy
+      const newSortBy = state.sortBy
+      if (prevSortBy === newSortBy) {
+        return state
+      }
+      if (instance.onChangeRow(state.activeRowIndex)) {
+        return state
+      }
+      return {
+        ...state,
+        sortBy: prevSortBy
+      }
+    }
+    case actions.setFilter: {
+      //cancel filter if not allowed to change active row
+      const prevFilters = previousState.filters
+      const newFilters = state.filters
+      if (prevFilters === newFilters) {
+        return state
+      }
+      if (instance.onChangeRow(state.activeRowIndex)) {
+        return state
+      }
+      return {
+        ...state,
+        filters: prevFilters
       }
     }
     default:
@@ -64,14 +111,15 @@ function reducer(state, action, previousState, instance) {
 
 function useInstance(instance) {
   const {
+    rows,
+    page = rows,
     data,
     getHooks,
     plugins,
-    rowsById,
     autoresetActiveRow = true,
-    state: { activeRowId },
+    state: { activeRowIndex },
     dispatch,
-    onActivate = () => true
+    onChange = () => true
   } = instance
 
   ensurePluginOrder(
@@ -86,17 +134,36 @@ function useInstance(instance) {
     'useActiveRow'
   )
 
-  const onActivateRow = React.useCallback(
-    (newId, oldId) => {
-      const newRow = rowsById[newId]
-      const oldRow = rowsById[oldId]
-      return onActivate(newRow, oldRow)
+  const activeRowId = React.useMemo(() => {
+    let id = ''
+    page.forEach((row, idx) => {
+      row.isActive = idx === activeRowIndex
+      row.rowIndex = idx
+      if (row.isActive) {
+        id = String(row.id)
+      }
+    })
+    if (!id) {
+      dispatch({ type: actions.setActiveRow, index: page.length ? 0 : -1 })
+    }
+    return id
+  }, [page, activeRowIndex, dispatch])
+
+  const onChangeRow = React.useCallback(
+    (index) => {
+      const row = page[index]
+      if (row) {
+        return onChange(row)
+      } else {
+        console.log(`No active row found for index ${index}`)
+        return true
+      }
     },
-    [rowsById, onActivate]
+    [page, onChange]
   )
 
   const activateRow = React.useCallback(
-    (id) => dispatch({ type: actions.setActiveRow, id }),
+    (index) => dispatch({ type: actions.setActiveRow, index }),
     [dispatch]
   )
 
@@ -116,16 +183,15 @@ function useInstance(instance) {
 
   Object.assign(instance, {
     activeRowId,
+    activeRowIndex,
     activateRow,
-    onActivateRow,
+    onChangeRow,
     getActiveRowProps
   })
 }
 
 function prepareRow(row, { instance }) {
-  row.activateRow = () => instance.activateRow(row.id)
-  row.isActive = row.id === instance.state.activeRowId
-
+  row.activateRow = () => instance.activateRow(row.rowIndex)
   row.getActiveRowProps = makePropGetter(
     instance.getHooks().getActiveRowProps,
     { instance: instance, row }
