@@ -79,7 +79,6 @@ function useInstance(instance) {
             if (curentRow.subRows) {
               curentRow.subRows = filterRows(curentRow.subRows)
             }
-
             idx++
           }
         }
