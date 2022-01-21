@@ -144,7 +144,13 @@ function useInstance(instance) {
       }
     })
     if (!id) {
-      dispatch({ type: actions.setActiveRow, index: page.length ? 0 : -1 })
+      if (page.length) {
+        //reset active row to the first row in page
+        dispatch({ type: actions.setActiveRow, index: 0 })
+      } else if (activeRowIndex !== -1) {
+        //no rows available, set active row to -1 if it isn't already
+        dispatch({ type: actions.setActiveRow, index: -1 })
+      }
     }
     return id
   }, [page, activeRowIndex, dispatch])

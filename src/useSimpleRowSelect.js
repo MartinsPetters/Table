@@ -17,6 +17,7 @@ actions.toggleRowSelected = 'toggleRowSelected'
 export const useSimpleRowSelect = (hooks) => {
   hooks.getToggleRowSelectedProps = [defaultGetToggleRowSelectedProps]
   hooks.getToggleAllRowsSelectedProps = [defaultGetToggleAllRowsSelectedProps]
+  hooks.visibleColumns.push(visibleColumns)
   hooks.stateReducers.push(reducer)
   hooks.useInstance.push(useInstance)
   hooks.prepareRow.push(prepareRow)
@@ -66,6 +67,20 @@ const defaultGetToggleAllRowsSelectedProps = (props, { instance }) => [
     )
   }
 ]
+
+function visibleColumns(columns) {
+  const newColumns = [
+    {
+      id: 'select_',
+      disableDragging: true,
+      disableResizing: true,
+      disableExpand: true,
+      maxWidth: 50
+    },
+    ...columns
+  ]
+  return newColumns
+}
 
 function reducer(state, action, previousState, instance) {
   if (action.type === actions.init) {

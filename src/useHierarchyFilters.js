@@ -57,7 +57,6 @@ function useInstance(instance) {
                 return false
               }
               const result = filterMethod([curentRow], [columnId], filterValue)
-              console.log('RESULT', result)
               return !result.length
             })
           if (hide) {
@@ -89,31 +88,15 @@ function useInstance(instance) {
     }, [filters, rows, allColumns, userFilterTypes, canFilter])
 
   React.useMemo(() => {
-    // Now that each filtered column has it's partially filtered rows,
-    // lets assign the final filtered rows to all of the other columns
     const nonFilteredColumns = allColumns.filter(
       (column) => !filters.find((d) => d.id === column.id)
     )
 
-    // This essentially enables faceted filter options to be built easily
-    // using every column's preFilteredRows value
     nonFilteredColumns.forEach((column) => {
       column.preFilteredRows = filteredRows
       column.filteredRows = filteredRows
     })
   }, [filteredRows, filters, allColumns])
-
-  console.log('NEW STATE', {
-    preFilteredRows: rows,
-    preFilteredFlatRows: flatRows,
-    preFilteredRowsById: rowsById,
-    filteredRows,
-    filteredFlatRows,
-    filteredRowsById,
-    rows: filteredRows,
-    flatRows: filteredFlatRows,
-    rowsById: filteredRowsById
-  })
 
   Object.assign(instance, {
     preFilteredRows: rows,

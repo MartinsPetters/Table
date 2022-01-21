@@ -11,14 +11,24 @@ import {
   usePagination,
   emptyRenderer
 } from 'react-table'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+
 import CircularJSON from 'circular-json'
 import ReactJson from 'react-json-view'
 
 import makeData from './makeData'
 import { useHierarchyFilters } from './useHierarchyFilters'
 import { useSimpleRowSelect } from './useSimpleRowSelect'
+import { useColumnUtilities } from './useColumnUtilities'
 import { useActiveRow } from './useActiveRow'
+import { css } from '@emotion/css'
+
+import TableFooter from './components/TableFooter'
+import TableHeader from './components/TableHeader'
+import ColumnHeader from './components/ColumnHeader'
+import ColumnFilter from './components/ColumnFilter'
+import Select from './components/Select'
+import TableBody from './components/TableBody'
+import Cell from './components/Cell'
 
 const Styles = styled.div`
   padding: 1rem;
@@ -29,12 +39,12 @@ const Styles = styled.div`
 
   .table {
     border: 1px solid #000;
-    max-width: 1200px;
     overflow-x: auto;
   }
 
   .header {
     font-weight: bold;
+    background-color: #dedede;
   }
 
   .rows {
@@ -44,8 +54,11 @@ const Styles = styled.div`
   .row {
     border-bottom: 1px solid #000;
     height: 32px;
+    &.filters {
+      height: 47px;
+    }
     &.active {
-      background-color: aqua;
+      background-color: #e6f1ff;
     }
     &.body {
       :last-child {
@@ -59,7 +72,9 @@ const Styles = styled.div`
     line-height: 30px;
     border-right: 1px solid #000;
     padding-left: 5px;
-
+    &.filter {
+      padding: 5px 2.5px 5px 2.5px;
+    }
     :last-child {
       border: 0;
     }
@@ -82,12 +97,12 @@ const Styles = styled.div`
     }
   }
   .header-group {
-    height: 100px;
+    height: 51px;
   }
 `
 
 // Define a default UI for filtering
-function DefaultColumnFilter({
+function DefaultColumnFilter_old({
   column: { filterValue, preFilteredRows, setFilter }
 }) {
   const count = preFilteredRows.length
@@ -137,42 +152,6 @@ function SelectColumnFilter({
         </option>
       ))}
     </select>
-  )
-}
-
-// This is a custom filter UI that uses a
-// slider to set the filter value between a column's
-// min and max values
-function SliderColumnFilter({
-  column: { filterValue, setFilter, preFilteredRows, id }
-}) {
-  // Calculate the min and max
-  // using the preFilteredRows
-
-  const [min, max] = React.useMemo(() => {
-    let min = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
-    let max = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
-    preFilteredRows.forEach((row) => {
-      min = Math.min(row.values[id], min)
-      max = Math.max(row.values[id], max)
-    })
-    return [min, max]
-  }, [id, preFilteredRows])
-
-  return (
-    <>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={filterValue || min}
-        onChange={(e) => {
-          setFilter(parseInt(e.target.value, 10))
-        }}
-      />
-      {filterValue}
-      <button onClick={() => setFilter(undefined)}>Off</button>
-    </>
   )
 }
 
@@ -268,21 +247,7 @@ function filterGreaterThan(rows, id, filterValue) {
 // check, but here, we want to remove the filter if it's not a number
 filterGreaterThan.autoRemove = (val) => typeof val !== 'number'
 
-const getItemStyle = ({ isDragging, isDropAnimating }, draggableStyle) => ({
-  ...draggableStyle,
-  // some basic styles to make the items look a bit nicer
-  userSelect: 'none',
-  height: '99px',
-  // change background colour if dragging
-  background: isDragging ? 'lightgreen' : 'white',
-
-  ...(!isDragging && { transform: 'translate(0,0)' }),
-  ...(isDropAnimating && { transitionDuration: '0.001s' })
-
-  // styles we need to apply on draggables
-})
-
-function Table({ columns: userColumns, data }) {
+function Table({ columns: userColumns, data, initialState }) {
   const filterTypes = React.useMemo(
     () => ({
       // Add a new  filter types.
@@ -290,15 +255,17 @@ function Table({ columns: userColumns, data }) {
       // Or, override the default text filter to use
       // "startWith"
       text: (rows, id, filterValue) => {
-        console.log('FILTER.TEXT', rows, id, filterValue, emptyRenderer)
-        return rows.filter((row) => {
+        const value = filterValue?.[0] || ''
+        const result = rows.filter((row) => {
           const rowValue = row.values[id]
           return rowValue !== undefined
             ? String(rowValue)
                 .toLowerCase()
-                .startsWith(String(filterValue).toLowerCase())
+                .startsWith(String(value).toLowerCase())
             : true
         })
+        //console.log('FILTER.TEXT', id, rows, filterValue, result)
+        return result
       }
     }),
     []
@@ -307,7 +274,13 @@ function Table({ columns: userColumns, data }) {
   const defaultColumn = React.useMemo(
     () => ({
       // Let's set up our default Filter UI
-      Filter: DefaultColumnFilter,
+      cellType: 'text',
+      cellFormat: (value) => String(value),
+      filterType: '',
+      Filter: ColumnFilter,
+      Header: ColumnHeader,
+      Select: Select,
+      Cell: Cell,
       width: 180
     }),
     []
@@ -338,14 +311,16 @@ function Table({ columns: userColumns, data }) {
 
   const table = useTable(
     {
+      tableName: 'CHANGE_ME',
       columns: userColumns,
       data,
+      initialState,
       defaultColumn,
       filterTypes,
       manualFilters: true,
       onSelect,
       canSelect,
-      canFilter: canSelect,
+      //canFilter: canSelect,
       onChange,
       getRowId,
       getSubRows: (row) => row.subRows,
@@ -359,8 +334,8 @@ function Table({ columns: userColumns, data }) {
       }
     },
     useFilters, // filter hook
-    useSortBy, //sort hook
     useHierarchyFilters,
+    useSortBy, //sort hook
     useExpanded, // expand hook
     useColumnOrder, //order
     useAbsoluteLayout, //div table hook
@@ -368,35 +343,14 @@ function Table({ columns: userColumns, data }) {
     usePagination, // pagination
     useSimpleRowSelect, // select rows
     useActiveRow, //active row
-    (hooks) => {
-      hooks.visibleColumns.push((columns) => [
-        // Let's make a column for selection
-        {
-          id: 'selection',
-          // The header can use the table's getToggleAllRowsSelectedProps method
-          // to render a checkbox
-          Header: ({ getToggleAllRowsSelectedProps }) => (
-            <div>
-              <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
-            </div>
-          ),
-          // The cell can use the individual row's getToggleRowSelectedProps method
-          // to the render a checkbox
-          Cell: ({ row }) => (
-            <div>
-              <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-            </div>
-          )
-        },
-        ...columns
-      ])
-    }
+    useColumnUtilities
   )
 
   const {
     getTableProps,
     getTableBodyProps,
     getToggleHideAllColumnsProps,
+    headers,
     headerGroups,
     //rows,
     setColumnOrder,
@@ -411,7 +365,17 @@ function Table({ columns: userColumns, data }) {
     previousPage,
     canNextPage,
     nextPage,
-    state: { pageIndex, pageSize/*, selectedRowIds*/ }
+    startDragging,
+    endDragging,
+    onChangeRow,
+    state: {
+      activeRowIndex,
+      pageIndex,
+      pageSize,
+      columnOrder,
+      isResizing,
+      isDragging /*, selectedRowIds*/
+    }
   } = table
 
   const currentColOrder = React.useRef()
@@ -426,200 +390,43 @@ function Table({ columns: userColumns, data }) {
         {allColumns.map((column) => (
           <div key={column.id}>
             <label>
-              <input type="checkbox" {...column.getToggleHiddenProps()} />{' '}
-              {column.Header}
+              <input type="checkbox" {...column.getToggleHiddenProps()} />
+              {column.label}
             </label>
           </div>
         ))}
         <br />
       </div>
-      <div {...getTableProps()} className="table">
+      <div style={{ width: 1000 }}>
         <div>
-          {headerGroups.map((headerGroup, idx) => (
-            <DragDropContext
-              key={idx}
-              onDragStart={() => {
-                currentColOrder.current = allColumns.map((o) => o.id)
-              }}
-              onDragUpdate={(dragUpdateObj, b) => {
-                // console.log("onDragUpdate", dragUpdateObj, b);
-
-                const colOrder = [...currentColOrder.current]
-                const sIndex = dragUpdateObj.source.index
-                const dIndex =
-                  dragUpdateObj.destination && dragUpdateObj.destination.index
-
-                if (typeof sIndex === 'number' && typeof dIndex === 'number') {
-                  colOrder.splice(sIndex, 1)
-                  colOrder.splice(dIndex, 0, dragUpdateObj.draggableId)
-                  setColumnOrder(colOrder)
-
-                  // console.log(
-                  //   "onDragUpdate",
-                  //   dragUpdateObj.destination.index,
-                  //   dragUpdateObj.source.index
-                  // );
-                  // console.log(temp);
-                }
-              }}
-            >
-              <Droppable droppableId="droppable" direction="horizontal">
-                {(droppableProvided, snapshot) => (
-                  <div
-                    {...headerGroup.getHeaderGroupProps()}
-                    ref={droppableProvided.innerRef}
-                    className="row header-group"
-                  >
-                    {headerGroup.headers.map((column, index) => (
-                      <Draggable
-                        key={column.id}
-                        draggableId={column.id}
-                        index={index}
-                        isDragDisabled={!column.accessor}
-                      >
-                        {(provided, snapshot) => {
-                          // console.log(column.getHeaderProps());
-
-                          // const {
-                          //   style,
-                          //   ...extraProps
-                          // } = column.getHeaderProps();
-
-                          // console.log(style, extraProps);
-
-                          return (
-                            <div
-                              {...column.getHeaderProps({
-                                style: { position: 'absolute' }
-                              })}
-                              className="cell header"
-                            >
-                              <div
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                // {...extraProps}
-                                ref={provided.innerRef}
-                                style={{
-                                  ...getItemStyle(
-                                    snapshot,
-                                    provided.draggableProps.style
-                                  )
-                                  // ...style
-                                }}
-                              >
-                                {column.render('Header')}
-                                <div {...column.getSortByToggleProps()}>
-                                  {/* Add a sort direction indicator */}
-                                  {column.canSort ? (
-                                    <span>
-                                      {column.isSorted
-                                        ? column.isSortedDesc
-                                          ? ' 🔽'
-                                          : ' 🔼'
-                                        : ' ⏹️'}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                {/* Render the columns filter UI */}
-                                <div>
-                                  {column.canFilter
-                                    ? column.render('Filter')
-                                    : null}
-                                </div>
-                                <div
-                                  {...column.getResizerProps()}
-                                  className={`resizer ${
-                                    column.isResizing ? 'isResizing' : ''
-                                  }`}
-                                />
-                              </div>
-                              <div
-                                {...column.getResizerProps()}
-                                className={`resizer ${
-                                  column.isResizing ? 'isResizing' : ''
-                                }`}
-                              />
-                            </div>
-                          )
-                        }}
-                      </Draggable>
-                    ))}
-                    {/* {droppableProvided.placeholder} */}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ))}
-        </div>
-        <div className="rows" {...getTableBodyProps()}>
-          {page.map((row, i) => {
-            prepareRow(row)
-            console.log(
-              'ROW PROPS',
-              row,
-              row.getRowProps(),
-              row.getActiveRowProps()
-            )
-            return (
-              <div
-                {...row.getRowProps()}
-                {...row.getActiveRowProps()}
-                className={`row body ${row.isActive ? 'active' : ''}`}
-              >
-                {row.cells.map((cell, index) => (
-                  <div {...cell.getCellProps()} key={index} className="cell">
-                    {cell.render('Cell')}
-                  </div>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-      <br />
-      <div className="pagination">
-        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-          {'<<'}
-        </button>{' '}
-        <button onClick={() => previousPage()} disabled={!canPreviousPage}>
-          {'<'}
-        </button>{' '}
-        <button onClick={() => nextPage()} disabled={!canNextPage}>
-          {'>'}
-        </button>{' '}
-        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-          {'>>'}
-        </button>{' '}
-        <span>
-          Page{' '}
-          <strong>
-            {pageIndex + 1} of {pageOptions.length}
-          </strong>{' '}
-        </span>
-        <span>
-          | Go to page:{' '}
-          <input
-            type="number"
-            defaultValue={pageIndex + 1}
-            onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0
-              gotoPage(page)
-            }}
-            style={{ width: '100px' }}
+          <div
+            {...getTableProps()}
+            className={`table${isResizing ? ' isResizing' : ''}${
+              isDragging ? ' isDragging' : ''
+            }`}
+          >
+            <TableHeader
+              headerGroups={headerGroups}
+              allColumns={allColumns}
+              setColumnOrder={setColumnOrder}
+              startDragging={startDragging}
+              endDragging={endDragging}
+            />
+            <TableBody
+              getTableBodyProps={getTableBodyProps}
+              page={page}
+              prepareRow={prepareRow}
+            />
+          </div>
+          <TableFooter
+            pageCount={pageCount}
+            gotoPage={gotoPage}
+            previousPage={previousPage}
+            nextPage={nextPage}
+            canPreviousPage={canPreviousPage}
+            canNextPage={canNextPage}
           />
-        </span>{' '}
-        <select
-          value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value))
-          }}
-        >
-          {[10, 20, 30, 40, 50].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
+        </div>
       </div>
       <pre>
         <ReactJson
@@ -637,74 +444,67 @@ function App() {
   const columns = React.useMemo(
     () => [
       {
-        // Build our expander column
-        id: 'expander', // Make sure it has an ID
-        Header: ({ getToggleAllRowsExpandedProps, isAllRowsExpanded }) => (
-          <span {...getToggleAllRowsExpandedProps()}>
-            {isAllRowsExpanded ? '➖' : '➕'}
-          </span>
-        ),
-        disableFilters: true,
-        Cell: ({ row }) => {
-          //console.log('Expand', row, row.getToggleRowExpandedProps())
-          // Use the row.canExpand and row.getToggleRowExpandedProps prop getter
-          // to build the toggle for expanding a row
-          return row.canExpand ? (
-            <span
-              {...row.getToggleRowExpandedProps({
-                style: {
-                  // We can even use the row.depth property
-                  // and paddingLeft to indicate the depth
-                  // of the row
-                  paddingLeft: `${row.depth * 2}rem`
-                }
-              })}
-            >
-              {row.isExpanded ? '➖' : '➕'}
-            </span>
-          ) : null
-        }
-      },
-
-      {
-        Header: 'id_',
+        label: 'ID',
         accessor: 'id_'
       },
       {
-        Header: 'First Name',
         accessor: 'firstName',
-        filter: 'text'
+        label: 'First Name',
+        filterType: 'text'
       },
       {
-        Header: 'Last Name',
-        accessor: 'lastName'
-        //filter: 'text',
+        label: 'Last Name',
+        accessor: 'lastName',
+        filterType: 'text'
       },
-
       {
-        Header: 'Age',
         accessor: 'age',
-        Filter: SliderColumnFilter,
-        filter: 'equals'
+        label: 'Age',
+        filterType: 'text'
+        //Filter: SliderColumnFilter,
+        //filter: 'text'
       },
       {
-        Header: 'Visits',
         accessor: 'visits',
-        Filter: NumberRangeColumnFilter,
-        filter: 'between'
+        label: 'Visits',
+        filterType: 'select',
+        filterOptions: (rows) => {
+          let options = new Set()
+          rows.forEach((row) => {
+            options.add(String(row.values['visits']))
+          })
+          options = Array.from(options)
+          options.sort((firstEl, secondEl) =>
+            Number(firstEl) < Number(secondEl) ? -1 : 1
+          )
+          console.log('filterOptions', options, rows)
+          return options
+        }
       },
       {
-        Header: 'Status',
-        accessor: 'status',
-        Filter: SelectColumnFilter,
-        filter: 'includes'
-      },
-      {
-        Header: 'Profile Progress',
         accessor: 'progress',
-        Filter: SliderColumnFilter,
+        cellType: 'boolean',
+        cellFormat: (value) => (value ? 'Y' : 'N'),
+        label: 'Profile Progress'
+        //Header: 'Profile Progress'
+        //Filter: SliderColumnFilter,
         //filter: filterGreaterThan,
-        filter: 'greaterThan'
+        //filter: 'text'
+      },
+      {
+        accessor: 'status',
+        label: 'Status',
+        filterType: 'select',
+        filterOptions: (rows) => {
+          let options = new Set()
+          rows.forEach((row) => {
+            options.add(row.values['status'])
+          })
+          options = Array.from(options)
+          options.sort((firstEl, secondEl) => (firstEl < secondEl ? -1 : 1))
+          console.log('filterOptions', options, rows)
+          return options
+        }
       }
     ],
     []
@@ -712,9 +512,18 @@ function App() {
 
   const data = React.useMemo(() => makeData(30, 3, 2), [])
 
+  const initialState = React.useMemo(() => {
+    let columnOrder = []
+    columns.reduce((state, col) => {
+      state.push(col.accessor || col.id)
+      return state
+    }, columnOrder)
+    return { columnOrder }
+  }, [columns])
+
   return (
     <Styles>
-      <Table columns={columns} data={data} />
+      <Table columns={columns} data={data} initialState={initialState} />
     </Styles>
   )
 }
