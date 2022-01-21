@@ -4,7 +4,7 @@ import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp'
 import ChevronRightIcon from '@material-ui/icons/ChevronRight'
 import { css } from '@emotion/css'
 
-const styleColumnHeader = {
+const styleHeader = {
   root: {
     display: 'flex',
     '& .Header-expand-root,.Header-sort-root': {
@@ -65,7 +65,7 @@ const styleColumnHeader = {
   }
 }
 
-export default function ColumnHeader({
+export default function Header({
   tableName,
   getToggleAllRowsExpandedProps,
   isAllRowsExpanded,
@@ -79,7 +79,7 @@ export default function ColumnHeader({
     isSortedDesc
   }
 }) {
-  const classes = styleColumnHeader
+  const classes = styleHeader
 
   const onSort = React.useMemo(
     () => getSortByToggleProps().onClick,

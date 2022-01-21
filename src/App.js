@@ -24,8 +24,8 @@ import { css } from '@emotion/css'
 
 import TableFooter from './components/TableFooter'
 import TableHeader from './components/TableHeader'
-import ColumnHeader from './components/ColumnHeader'
-import ColumnFilter from './components/ColumnFilter'
+import Header from './components/Header'
+import Filter from './components/Filter'
 import Select from './components/Select'
 import TableBody from './components/TableBody'
 import Cell from './components/Cell'
@@ -277,8 +277,8 @@ function Table({ columns: userColumns, data, initialState }) {
       cellType: 'text',
       cellFormat: (value) => String(value),
       filterType: '',
-      Filter: ColumnFilter,
-      Header: ColumnHeader,
+      Filter: Filter,
+      Header: Header,
       Select: Select,
       Cell: Cell,
       width: 180

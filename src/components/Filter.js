@@ -3,7 +3,7 @@ import { Grid } from '@material-ui/core'
 import FilterSelect from './filter/FilterSelect'
 import FilterText from './filter/FilterText'
 
-export default function ColumnFilter({
+export default function Filter({
   tableName,
   setFilter,
   column: {
