@@ -11,6 +11,7 @@ actions.columnDoneDragging = 'columnDoneDragging'
 export const useColumnUtilities = (hooks) => {
   hooks.stateReducers.push(reducer)
   hooks.useInstance.push(useInstance)
+  hooks.visibleColumns.push(visibleColumns)
   hooks.getHeaderProps.push({
     style: {
       position: 'absolute'
@@ -19,6 +20,10 @@ export const useColumnUtilities = (hooks) => {
 }
 
 useColumnUtilities.pluginName = pluginName
+
+function visibleColumns(columns) {
+  return columns.filter((col) => col.cellType !== 'hidden')
+}
 
 function reducer(state, action, previousState, instance) {
   switch (action.type) {
@@ -71,6 +76,16 @@ function useInstance(instance) {
     [dispatch]
   )
 
+  const resetHiddenColumns = React.useCallback(
+    () => dispatch({ type: actions.resetHiddenColumns }),
+    [dispatch]
+  )
+
+  const resetColumnOrder = React.useCallback(
+    () => dispatch({ type: actions.resetColumnOrder }),
+    [dispatch]
+  )
+
   const expandColumnId = React.useMemo(() => {
     let expandColId = ''
     headerGroups.forEach((group) => {
@@ -90,6 +105,8 @@ function useInstance(instance) {
 
   Object.assign(instance, {
     expandColumnId,
+    resetHiddenColumns,
+    resetColumnOrder,
     startDragging,
     endDragging
   })

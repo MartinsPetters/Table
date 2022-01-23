@@ -22,6 +22,7 @@ import { useColumnUtilities } from './useColumnUtilities'
 import { useActiveRow } from './useActiveRow'
 import { css } from '@emotion/css'
 
+import TableColumnSelect from './components/TableColumnSelect'
 import TableFooter from './components/TableFooter'
 import TableHeader from './components/TableHeader'
 import Header from './components/Header'
@@ -247,7 +248,19 @@ function filterGreaterThan(rows, id, filterValue) {
 // check, but here, we want to remove the filter if it's not a number
 filterGreaterThan.autoRemove = (val) => typeof val !== 'number'
 
+const styleTable = {
+  root: {
+    border: '1px solid #e0e0e0',
+    overflowX: 'auto',
+    '*': {
+      boxSizing: 'border-box'
+    }
+  }
+}
+
 function Table({ columns: userColumns, data, initialState }) {
+  const classes = styleTable
+
   const filterTypes = React.useMemo(
     () => ({
       // Add a new  filter types.
@@ -349,16 +362,11 @@ function Table({ columns: userColumns, data, initialState }) {
   const {
     getTableProps,
     getTableBodyProps,
-    getToggleHideAllColumnsProps,
-    headers,
     headerGroups,
-    //rows,
     setColumnOrder,
     allColumns,
     prepareRow,
     page, // Instead of using 'rows', we'll use page,
-    pageOptions,
-    setPageSize,
     pageCount,
     gotoPage,
     canPreviousPage,
@@ -367,43 +375,27 @@ function Table({ columns: userColumns, data, initialState }) {
     nextPage,
     startDragging,
     endDragging,
-    onChangeRow,
-    state: {
-      activeRowIndex,
-      pageIndex,
-      pageSize,
-      columnOrder,
-      isResizing,
-      isDragging /*, selectedRowIds*/
-    }
+    setHiddenColumns,
+    resetHiddenColumns,
+    resetColumnOrder,
+    state: { hiddenColumns }
   } = table
-
-  const currentColOrder = React.useRef()
 
   return (
     <>
-      <div>
-        <div>
-          <IndeterminateCheckbox {...getToggleHideAllColumnsProps()} /> Toggle
-          All
-        </div>
-        {allColumns.map((column) => (
-          <div key={column.id}>
-            <label>
-              <input type="checkbox" {...column.getToggleHiddenProps()} />
-              {column.label}
-            </label>
-          </div>
-        ))}
-        <br />
-      </div>
+      <TableColumnSelect
+        allColumns={allColumns}
+        hiddenColumns={hiddenColumns}
+        setColumnOrder={setColumnOrder}
+        setHiddenColumns={setHiddenColumns}
+        resetColumnOrder={resetColumnOrder}
+        resetHiddenColumns={resetHiddenColumns}
+      />
       <div style={{ width: 1000 }}>
         <div>
           <div
             {...getTableProps()}
-            className={`table${isResizing ? ' isResizing' : ''}${
-              isDragging ? ' isDragging' : ''
-            }`}
+            className={`Table-root ${css(classes.root)}`}
           >
             <TableHeader
               headerGroups={headerGroups}
@@ -445,6 +437,7 @@ function App() {
     () => [
       {
         label: 'ID',
+        cellType: 'hidden',
         accessor: 'id_'
       },
       {
@@ -522,9 +515,9 @@ function App() {
   }, [columns])
 
   return (
-    <Styles>
+    <div style={{ margin: 10 }}>
       <Table columns={columns} data={data} initialState={initialState} />
-    </Styles>
+    </div>
   )
 }
 
