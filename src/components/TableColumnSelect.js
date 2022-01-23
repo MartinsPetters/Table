@@ -24,7 +24,7 @@ const styleTableColumnSelect = {
         fill: '#2376D7'
       }
     },
-    '& .TableColumnSelect-add-button-root,.TableColumnSelect-order-button-root':
+    '& .TableColumnSelect-add-button-root,.TableColumnSelect-order-button-root,.TableColumnSelect-show-root,.TableColumnSelect-hide-root':
       {
         userSelect: 'none',
         display: 'flex',
@@ -49,12 +49,12 @@ export default function TableColumnSelect({
   const showSelect = React.useRef()
   const hideSelect = React.useRef()
 
-  const resetGroup = (allCol, hiddenCol) => {
+  const resetGroup = React.useCallback(() => {
     const newShowGroup = []
     const newHideGroup = []
-    allCol.forEach(({ id, label, cellType }) => {
+    allColumns.forEach(({ id, label, cellType }) => {
       if (cellType !== 'hidden' && id !== 'select_') {
-        if (hiddenCol.includes(id)) {
+        if (hiddenColumns.includes(id)) {
           newHideGroup.push({ id, label })
         } else {
           newShowGroup.push({ id, label })
@@ -63,7 +63,7 @@ export default function TableColumnSelect({
     })
     setShowGroup(newShowGroup)
     setHideGroup(newHideGroup)
-  }
+  }, [allColumns, hiddenColumns])
 
   const saveGroup = () => {
     setColumnOrder(showGroup.map((col) => col.id))
@@ -76,8 +76,8 @@ export default function TableColumnSelect({
   }
 
   React.useEffect(() => {
-    resetGroup(allColumns, hiddenColumns)
-  }, [allColumns, hiddenColumns])
+    resetGroup()
+  }, [resetGroup])
 
   const addToGroup = (show, all) => () => {
     const options = Array.apply(
@@ -129,6 +129,7 @@ export default function TableColumnSelect({
     <>
       <div className={`TableColumnSelect-root ${css(classes.root)}`}>
         <div className="TableColumnSelect-hide-root">
+          {'Available Columns'}
           <select
             ref={hideSelect}
             className="TableColumnSelect-list"
@@ -185,6 +186,7 @@ export default function TableColumnSelect({
           </IconButton>
         </div>
         <div className="TableColumnSelect-show-root">
+          {'Selected Columns'}
           <select
             ref={showSelect}
             className="TableColumnSelect-list"
