@@ -14,8 +14,11 @@ const styleTableToolbar = {
   }
 }
 
-export default function TableToolbar({ tableName, selectedFlatRows }) {
-  const selectedCount = selectedFlatRows.length
+export default function TableToolbar({ tableName, state: { selectedRowIds } }) {
+  const selectedCount = React.useMemo(
+    () => Object.keys(selectedRowIds).length,
+    [selectedRowIds]
+  )
   const classes = styleTableToolbar
   return (
     <div

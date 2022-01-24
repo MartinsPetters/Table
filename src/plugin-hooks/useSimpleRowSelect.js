@@ -160,9 +160,9 @@ function reducer(state, action, previousState, instance) {
           }
         }
       }
-
-      if (selectSubRows && getSubRows(row)) {
-        return getSubRows(row).forEach((row) => handleRowById(row.id))
+      const subRows = getSubRows(row)
+      if (selectSubRows && subRows) {
+        return subRows.forEach((row) => handleRowById(row.id))
       }
     }
 
