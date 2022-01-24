@@ -516,6 +516,13 @@ function App() {
 
   return (
     <div style={{ margin: 10 }}>
+      <button
+        onClick={() =>
+          document.dispatchEvent(new CustomEvent('nexus.columnsDisplayed'))
+        }
+      >
+        {'Columns Displayed'}
+      </button>
       <Table columns={columns} data={data} initialState={initialState} />
     </div>
   )
