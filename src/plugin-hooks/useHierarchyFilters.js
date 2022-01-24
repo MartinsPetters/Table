@@ -56,8 +56,13 @@ function useInstance(instance) {
                 )
                 return false
               }
-              const result = filterMethod([curentRow], [columnId], filterValue)
-              return !result.length
+              const result = filterMethod(
+                [curentRow],
+                [columnId],
+                filterValue,
+                column.filterType
+              )
+              return !result?.length
             })
           if (hide) {
             if (curentRow.subRows) {

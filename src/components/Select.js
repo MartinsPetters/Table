@@ -27,13 +27,17 @@ const styleSelect = {
 }
 
 export default function Select({
+  tableName,
   type = 'cell',
   row,
   getToggleAllRowsSelectedProps
 }) {
   const classes = styleSelect
   return (
-    <div className={`Select-root Select-${type} ${css(classes.root)}`}>
+    <div
+      data-testid={tableName + '_' + type + '_Filter'}
+      className={`Select-root Select-${type} ${css(classes.root)}`}
+    >
       <Checkbox
         color="default"
         classes={{

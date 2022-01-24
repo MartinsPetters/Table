@@ -44,12 +44,15 @@ const styleCell = {
   }
 }
 
-export default function Cell({ value, column }) {
-  const { cellType, cellFormat } = column
+export default function Cell({ tableName, value, column }) {
+  const { cellType, cellFormat, id } = column
   const classes = styleCell
 
   return (
-    <div className={`Cell-root Cell-type-${cellType} ${css(classes.root)}`}>
+    <div
+      data-testid={tableName + '_' + id + '_Cell'}
+      className={`Cell-root Cell-type-${cellType} ${css(classes.root)}`}
+    >
       {cellType === 'boolean' ? (
         <div className="Cell-checkbox-root" title={cellFormat(value)}>
           <Checkbox

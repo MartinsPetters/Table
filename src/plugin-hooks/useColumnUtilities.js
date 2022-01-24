@@ -1,5 +1,5 @@
 import React from 'react'
-import { actions } from 'react-table'
+import { actions, flexRender, useGetLatest } from 'react-table'
 
 const pluginName = 'useColumnUtilities'
 
@@ -86,6 +86,20 @@ function useInstance(instance) {
     [dispatch]
   )
 
+  const getInstance = useGetLatest(instance)
+
+  const tools = React.useMemo(
+    () => ({
+      render: (userProps) => {
+        const instance = getInstance()
+        const { Tools } = instance
+        const props = { ...instance, userProps }
+        return flexRender(Tools, props)
+      }
+    }),
+    [getInstance]
+  )
+
   const expandColumnId = React.useMemo(() => {
     let expandColId = ''
     headerGroups.forEach((group) => {
@@ -104,6 +118,7 @@ function useInstance(instance) {
   }, [headerGroups])
 
   Object.assign(instance, {
+    tools,
     expandColumnId,
     resetHiddenColumns,
     resetColumnOrder,

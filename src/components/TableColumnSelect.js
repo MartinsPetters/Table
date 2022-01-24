@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogContent
 } from '@material-ui/core'
-import { FirstPage, PreviousPage, BackwardIcon } from './Icons'
+import { FirstPageIcon, PreviousPageIcon, BackwardIcon } from './Icons'
 import { css } from '@emotion/css'
 
 const styleTableColumnSelect = {
@@ -64,6 +64,7 @@ const styleTableColumnSelect = {
 }
 
 export default function TableColumnSelect({
+  tableName,
   allColumns,
   hiddenColumns,
   setColumnOrder,
@@ -116,12 +117,17 @@ export default function TableColumnSelect({
   }, [resetGroup])
 
   React.useEffect(() => {
-    const openDialog = () => setOpen(true)
+    const openDialog = ({ detail }) => {
+      if (detail?.tableName === tableName) {
+        setOpen(true)
+      }
+    }
     document.addEventListener('nexus.columnsDisplayed', openDialog)
     return () => {
       document.removeEventListener('nexus.columnsDisplayed', openDialog)
     }
-  }, [resetGroup])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const addToGroup = (show, all) => () => {
     const options = Array.apply(
@@ -171,6 +177,7 @@ export default function TableColumnSelect({
 
   return (
     <Dialog
+      data-testid={tableName + '_TableColumnSelect'}
       open={open}
       disableEnforceFocus={true}
       fullWidth={false}
@@ -203,7 +210,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={addToGroup(true, false)}
             >
-              <PreviousPage
+              <PreviousPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(-180deg)' }}
               />
@@ -212,7 +219,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={addToGroup(false, false)}
             >
-              <PreviousPage
+              <PreviousPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(0deg)' }}
               />
@@ -260,7 +267,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={orderGroup(false, true)}
             >
-              <FirstPage
+              <FirstPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(90deg)' }}
               />
@@ -269,7 +276,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={orderGroup(false, false)}
             >
-              <PreviousPage
+              <PreviousPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(90deg)' }}
               />
@@ -278,7 +285,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={orderGroup(true, false)}
             >
-              <PreviousPage
+              <PreviousPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(-90deg)' }}
               />
@@ -287,7 +294,7 @@ export default function TableColumnSelect({
               className="TableColumnSelect-icon-button"
               onClick={orderGroup(true, true)}
             >
-              <FirstPage
+              <FirstPageIcon
                 className="TableColumnSelect-icon"
                 style={{ transform: 'rotate(-90deg)' }}
               />

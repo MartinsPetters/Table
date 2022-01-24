@@ -48,12 +48,15 @@ const styleTableBody = {
   }
 }
 
-export default function TableBody({ page, prepareRow }) {
+export default function TableBody({ tableName, page, prepareRow }) {
   const classes = styleTableBody
 
   return (
-    <div className={`TableBody-root  ${css(classes.root)}`}>
-      {page.map((row) => {
+    <div
+      data-testid={tableName + '_TableBody'}
+      className={`TableBody-root  ${css(classes.root)}`}
+    >
+      {page.map((row, idx) => {
         prepareRow(row)
         return (
           <div
@@ -63,6 +66,7 @@ export default function TableBody({ page, prepareRow }) {
             }`}
           >
             <div
+              data-testid={tableName + '_' + idx + '_Row'}
               {...row.getRowProps()}
               {...row.getActiveRowProps()}
               className="TableBody-row"

@@ -1,5 +1,6 @@
 import React from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+import { SeparatorIcon } from './Icons'
 import { css } from '@emotion/css'
 
 const styleTableHeader = {
@@ -72,6 +73,7 @@ const styleTableHeader = {
 }
 
 export default function TableHeader({
+  tableName,
   headerGroups,
   allColumns,
   setColumnOrder,
@@ -82,7 +84,10 @@ export default function TableHeader({
   const currentColOrder = React.useRef()
 
   return (
-    <div className={`TableHeader-root ${css(classes.root)}`}>
+    <div
+      data-testid={tableName + '_TableHeader'}
+      className={`TableHeader-root ${css(classes.root)}`}
+    >
       <div className="TableHeader-header-row-root">
         {headerGroups.map((headerGroup, idx) => (
           <DragDropContext
@@ -151,13 +156,10 @@ export default function TableHeader({
                               header.isResizing ? ' TableHeader-resizing' : ''
                             }`}
                           >
-                            <svg
-                              viewBox="0 0 24 24"
+                            <SeparatorIcon
                               preserveAspectRatio="none"
                               className={'TableHeader-resizer-icon'}
-                            >
-                              <path d="M11 19V5h2v14z" />
-                            </svg>
+                            />
                           </div>
                         </div>
                       )}

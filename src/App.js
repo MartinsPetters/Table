@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+import { css } from '@emotion/css'
 import {
   useTable,
   useExpanded,
@@ -8,20 +8,13 @@ import {
   useResizeColumns,
   useColumnOrder,
   useAbsoluteLayout,
-  usePagination,
-  emptyRenderer
+  usePagination
 } from 'react-table'
-
-import CircularJSON from 'circular-json'
-import ReactJson from 'react-json-view'
-
-import makeData from './makeData'
-import { useHierarchyFilters } from './useHierarchyFilters'
-import { useSimpleRowSelect } from './useSimpleRowSelect'
-import { useColumnUtilities } from './useColumnUtilities'
-import { useActiveRow } from './useActiveRow'
-import { css } from '@emotion/css'
-
+import { useHierarchyFilters } from './plugin-hooks/useHierarchyFilters'
+import { useSimpleRowSelect } from './plugin-hooks/useSimpleRowSelect'
+import { useColumnUtilities } from './plugin-hooks/useColumnUtilities'
+import { useActiveRow } from './plugin-hooks/useActiveRow'
+import TableToolbar from './components/TableToolbar'
 import TableColumnSelect from './components/TableColumnSelect'
 import TableFooter from './components/TableFooter'
 import TableHeader from './components/TableHeader'
@@ -31,222 +24,9 @@ import Select from './components/Select'
 import TableBody from './components/TableBody'
 import Cell from './components/Cell'
 
-const Styles = styled.div`
-  padding: 1rem;
-
-  * {
-    box-sizing: border-box;
-  }
-
-  .table {
-    border: 1px solid #000;
-    overflow-x: auto;
-  }
-
-  .header {
-    font-weight: bold;
-    background-color: #dedede;
-  }
-
-  .rows {
-    overflow-y: auto;
-  }
-
-  .row {
-    border-bottom: 1px solid #000;
-    height: 32px;
-    &.filters {
-      height: 47px;
-    }
-    &.active {
-      background-color: #e6f1ff;
-    }
-    &.body {
-      :last-child {
-        border: 0;
-      }
-    }
-  }
-
-  .cell {
-    height: 100%;
-    line-height: 30px;
-    border-right: 1px solid #000;
-    padding-left: 5px;
-    &.filter {
-      padding: 5px 2.5px 5px 2.5px;
-    }
-    :last-child {
-      border: 0;
-    }
-    .resizer {
-      display: inline-block;
-      background: blue;
-      width: 10px;
-      height: 100%;
-      position: absolute;
-      right: 0;
-      top: 0;
-      transform: translateX(50%);
-      z-index: 1;
-      ${'' /* prevents from scrolling while dragging on touch devices */}
-      touch-action:none;
-
-      &.isResizing {
-        background: red;
-      }
-    }
-  }
-  .header-group {
-    height: 51px;
-  }
-`
-
-// Define a default UI for filtering
-function DefaultColumnFilter_old({
-  column: { filterValue, preFilteredRows, setFilter }
-}) {
-  const count = preFilteredRows.length
-
-  return (
-    <input
-      value={filterValue || ''}
-      onChange={(e) => {
-        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-      }}
-      placeholder={`Search ${count} records...`}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box'
-      }}
-    />
-  )
-}
-
-// This is a custom filter UI for selecting
-// a unique option from a list
-function SelectColumnFilter({
-  column: { filterValue, setFilter, preFilteredRows, id }
-}) {
-  // Calculate the options for filtering
-  // using the preFilteredRows
-  const options = React.useMemo(() => {
-    const options = new Set()
-    preFilteredRows.forEach((row) => {
-      options.add(row.values[id])
-    })
-    return [...options.values()]
-  }, [id, preFilteredRows])
-
-  // Render a multi-select box
-  return (
-    <select
-      value={filterValue}
-      onChange={(e) => {
-        setFilter(e.target.value || undefined)
-      }}
-    >
-      <option value="">All</option>
-      {options.map((option, i) => (
-        <option key={i} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
-  )
-}
-
-// This is a custom UI for our 'between' or number range
-// filter. It uses two number boxes and filters rows to
-// ones that have values between the two
-function NumberRangeColumnFilter({
-  column: { filterValue = [], preFilteredRows, setFilter, id }
-}) {
-  const [min, max] = React.useMemo(() => {
-    let min = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
-    let max = preFilteredRows.length ? preFilteredRows[0].values[id] : 0
-    preFilteredRows.forEach((row) => {
-      min = Math.min(row.values[id], min)
-      max = Math.max(row.values[id], max)
-    })
-    return [min, max]
-  }, [id, preFilteredRows])
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap'
-      }}
-    >
-      <div>
-        <input
-          value={filterValue[0] || ''}
-          type="number"
-          onChange={(e) => {
-            const val = e.target.value
-            setFilter((old = []) => [
-              val ? parseInt(val, 10) : undefined,
-              old[1]
-            ])
-          }}
-          placeholder={`Min (${min})`}
-          style={{
-            width: '70px',
-            marginRight: '0.5rem'
-          }}
-        />
-      </div>
-      <div>to</div>
-      <div>
-        <input
-          value={filterValue[1] || ''}
-          type="number"
-          onChange={(e) => {
-            const val = e.target.value
-            setFilter((old = []) => [
-              old[0],
-              val ? parseInt(val, 10) : undefined
-            ])
-          }}
-          placeholder={`Max (${max})`}
-          style={{
-            width: '70px',
-            marginLeft: '0.5rem'
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-const IndeterminateCheckbox = React.forwardRef(
-  ({ indeterminate, ...rest }, ref) => {
-    const defaultRef = React.useRef()
-    const resolvedRef = ref || defaultRef
-
-    React.useEffect(() => {
-      resolvedRef.current.indeterminate = indeterminate
-    }, [resolvedRef, indeterminate])
-
-    return <input type="checkbox" ref={resolvedRef} {...rest} />
-  }
-)
-
-// Define a custom filter filter function!
-function filterGreaterThan(rows, id, filterValue) {
-  return rows.filter((row) => {
-    const rowValue = row.values[id]
-    return rowValue >= filterValue
-  })
-}
-
-// This is an autoRemove method on the filter function that
-// when given the new filter value and returns true, the filter
-// will be automatically removed. Normally this is just an undefined
-// check, but here, we want to remove the filter if it's not a number
-filterGreaterThan.autoRemove = (val) => typeof val !== 'number'
+import CircularJSON from 'circular-json'
+import ReactJson from 'react-json-view'
+import makeData from './makeData'
 
 const styleTable = {
   root: {
@@ -261,40 +41,40 @@ const styleTable = {
 function Table({ columns: userColumns, data, initialState }) {
   const classes = styleTable
 
-  const filterTypes = React.useMemo(
-    () => ({
-      // Add a new  filter types.
-      greaterThan: filterGreaterThan,
-      // Or, override the default text filter to use
-      // "startWith"
-      text: (rows, id, filterValue) => {
-        const value = filterValue?.[0] || ''
-        const result = rows.filter((row) => {
-          const rowValue = row.values[id]
-          return rowValue !== undefined
-            ? String(rowValue)
-                .toLowerCase()
-                .startsWith(String(value).toLowerCase())
-            : true
-        })
-        //console.log('FILTER.TEXT', id, rows, filterValue, result)
-        return result
-      }
-    }),
-    []
-  )
-
   const defaultColumn = React.useMemo(
     () => ({
-      // Let's set up our default Filter UI
       cellType: 'text',
       cellFormat: (value) => String(value),
       filterType: '',
+      filter: (rows, id, filterValue, filterType) => {
+        switch (filterType) {
+          case 'select': {
+            const value = filterValue?.[0] || ''
+            const result = rows.filter((row) => {
+              const rowValue = row.values[id]
+              return rowValue !== undefined ? rowValue === value : true
+            })
+            return result
+          }
+          default: {
+            const value = filterValue?.[0] || ''
+            const result = rows.filter((row) => {
+              const rowValue = row.values[id]
+              return rowValue !== undefined
+                ? String(rowValue)
+                    .toLowerCase()
+                    .includes(String(value).toLowerCase())
+                : true
+            })
+            return result
+          }
+        }
+      },
       Filter: Filter,
       Header: Header,
       Select: Select,
       Cell: Cell,
-      width: 180
+      width: 150
     }),
     []
   )
@@ -324,12 +104,12 @@ function Table({ columns: userColumns, data, initialState }) {
 
   const table = useTable(
     {
-      tableName: 'CHANGE_ME',
+      tableName: 'Table',
       columns: userColumns,
       data,
       initialState,
+      Tools: TableToolbar,
       defaultColumn,
-      filterTypes,
       manualFilters: true,
       onSelect,
       canSelect,
@@ -347,7 +127,7 @@ function Table({ columns: userColumns, data, initialState }) {
       }
     },
     useFilters, // filter hook
-    useHierarchyFilters,
+    useHierarchyFilters, //filter hook for hierarchy
     useSortBy, //sort hook
     useExpanded, // expand hook
     useColumnOrder, //order
@@ -356,10 +136,12 @@ function Table({ columns: userColumns, data, initialState }) {
     usePagination, // pagination
     useSimpleRowSelect, // select rows
     useActiveRow, //active row
-    useColumnUtilities
+    useColumnUtilities //active other utilities
   )
 
   const {
+    tools,
+    tableName,
     getTableProps,
     getTableBodyProps,
     headerGroups,
@@ -384,6 +166,7 @@ function Table({ columns: userColumns, data, initialState }) {
   return (
     <>
       <TableColumnSelect
+        tableName={tableName}
         allColumns={allColumns}
         hiddenColumns={hiddenColumns}
         setColumnOrder={setColumnOrder}
@@ -391,35 +174,35 @@ function Table({ columns: userColumns, data, initialState }) {
         resetColumnOrder={resetColumnOrder}
         resetHiddenColumns={resetHiddenColumns}
       />
-      <div style={{ width: 1000 }}>
-        <div>
-          <div
-            {...getTableProps()}
-            className={`Table-root ${css(classes.root)}`}
-          >
-            <TableHeader
-              headerGroups={headerGroups}
-              allColumns={allColumns}
-              setColumnOrder={setColumnOrder}
-              startDragging={startDragging}
-              endDragging={endDragging}
-            />
-            <TableBody
-              getTableBodyProps={getTableBodyProps}
-              page={page}
-              prepareRow={prepareRow}
-            />
-          </div>
-          <TableFooter
-            pageCount={pageCount}
-            gotoPage={gotoPage}
-            previousPage={previousPage}
-            nextPage={nextPage}
-            canPreviousPage={canPreviousPage}
-            canNextPage={canNextPage}
+      <div>
+        <div>{tools.render()}</div>
+        <div {...getTableProps()} className={`Table-root ${css(classes.root)}`}>
+          <TableHeader
+            tableName={tableName}
+            headerGroups={headerGroups}
+            allColumns={allColumns}
+            setColumnOrder={setColumnOrder}
+            startDragging={startDragging}
+            endDragging={endDragging}
+          />
+          <TableBody
+            tableName={tableName}
+            getTableBodyProps={getTableBodyProps}
+            page={page}
+            prepareRow={prepareRow}
           />
         </div>
+        <TableFooter
+          tableName={tableName}
+          pageCount={pageCount}
+          gotoPage={gotoPage}
+          previousPage={previousPage}
+          nextPage={nextPage}
+          canPreviousPage={canPreviousPage}
+          canNextPage={canNextPage}
+        />
       </div>
+
       <pre>
         <ReactJson
           src={JSON.parse(CircularJSON.stringify({ table }))}
@@ -518,12 +301,20 @@ function App() {
     <div style={{ margin: 10 }}>
       <button
         onClick={() =>
-          document.dispatchEvent(new CustomEvent('nexus.columnsDisplayed'))
+          document.dispatchEvent(
+            new CustomEvent('nexus.columnsDisplayed', {
+              detail: {
+                tableName: 'Table'
+              }
+            })
+          )
         }
       >
         {'Columns Displayed'}
       </button>
-      <Table columns={columns} data={data} initialState={initialState} />
+      <div style={{ width: 1000 }}>
+        <Table columns={columns} data={data} initialState={initialState} />
+      </div>
     </div>
   )
 }

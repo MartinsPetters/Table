@@ -1,6 +1,6 @@
 import React from 'react'
 import { IconButton } from '@material-ui/core'
-import { FirstPage, PreviousPage } from './Icons'
+import { FirstPageIcon, PreviousPageIcon } from './Icons'
 import { css } from '@emotion/css'
 
 const styleTableFooter = {
@@ -33,6 +33,7 @@ const styleTableFooter = {
 }
 
 export default function TableFooter({
+  tableName,
   pageCount,
   gotoPage,
   previousPage,
@@ -42,29 +43,32 @@ export default function TableFooter({
 }) {
   const classes = styleTableFooter
   return (
-    <div className={`TableFooter-root ${css(classes.root)}`}>
+    <div
+      data-testid={tableName + '_TableFooter'}
+      className={`TableFooter-root ${css(classes.root)}`}
+    >
       <div className={css(classes.pagination)}>
         <IconButton
           className={css(classes.button)}
           onClick={() => gotoPage(0)}
           disabled={!canPreviousPage}
         >
-          <FirstPage className="Footer-icon" />
+          <FirstPageIcon className="Footer-icon Footer-first" />
         </IconButton>
         <IconButton
           className={css(classes.button)}
           onClick={() => previousPage()}
           disabled={!canPreviousPage}
         >
-          <PreviousPage className="Footer-icon" />
+          <PreviousPageIcon className="Footer-icon Footer-previous" />
         </IconButton>
         <IconButton
           className={css(classes.button)}
           onClick={() => nextPage()}
           disabled={!canNextPage}
         >
-          <PreviousPage
-            className="Footer-icon"
+          <PreviousPageIcon
+            className="Footer-icon Footer-next"
             style={{ transform: 'rotate(-180deg)' }}
           />
         </IconButton>
@@ -73,8 +77,8 @@ export default function TableFooter({
           onClick={() => gotoPage(pageCount - 1)}
           disabled={!canNextPage}
         >
-          <FirstPage
-            className="Footer-icon"
+          <FirstPageIcon
+            className="Footer-icon Footer-last"
             style={{ transform: 'rotate(-180deg)' }}
           />
         </IconButton>

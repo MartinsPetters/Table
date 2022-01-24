@@ -1,6 +1,6 @@
 import React from 'react'
 
-export function FirstPage(props) {
+export function FirstPageIcon(props) {
   return (
     <svg className="Icon" viewBox="0 0 251 413" {...props}>
       <g transform="translate(0,413) scale(0.1,-0.1)">
@@ -10,7 +10,7 @@ export function FirstPage(props) {
   )
 }
 
-export function PreviousPage(props) {
+export function PreviousPageIcon(props) {
   return (
     <svg className="Icon" viewBox="0 0 253 413" {...props}>
       <g transform="translate(0,413) scale(0.1,-0.1)">
@@ -22,10 +22,18 @@ export function PreviousPage(props) {
 
 export function BackwardIcon(props) {
   return (
-    <svg viewBox="0 0 389 360" {...props}>
+    <svg className="Icon" viewBox="0 0 389 360" {...props}>
       <g transform="translate(0,360) scale(0.1,-0.1)">
         <path d="M1100 2679 c-574 -477 -1046 -871 -1047 -876 -1 -4 469 -399 1045 -876 l1047 -868 5 699 5 698 840 -696 840 -697 3 869 c1 477 1 1260 0 1739 l-3 871 -840 -696 -840 -697 -5 699 -5 698 -1045 -867z" />
       </g>
+    </svg>
+  )
+}
+
+export function SeparatorIcon(props) {
+  return (
+    <svg className="Icon" viewBox="0 0 24 24" {...props}>
+      <path d="M11 19V5h2v14z" />
     </svg>
   )
 }
