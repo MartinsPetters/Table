@@ -52,7 +52,9 @@ function Table({ columns: userColumns, data, initialState }) {
             const value = filterValue?.[0] || ''
             const result = rows.filter((row) => {
               const rowValue = row.values[id]
-              return rowValue !== undefined ? rowValue === value : true
+              return rowValue !== undefined
+                ? String(rowValue) === String(value)
+                : true
             })
             return result
           }
