@@ -24,7 +24,7 @@ function useInstance(instance) {
     flatRows,
     rowsById,
     allColumns,
-    canFilter = () => true,
+    canFilterRow = () => true,
     filterTypes: userFilterTypes,
     state: { filters }
   } = instance
@@ -40,7 +40,7 @@ function useInstance(instance) {
         while (idx !== filteredRows.length) {
           const curentRow = filteredRows[idx]
           const hide =
-            canFilter(curentRow) &&
+            canFilterRow(curentRow) &&
             filters.some(({ id: columnId, value: filterValue }) => {
               const column = allColumns.find((d) => d.id === columnId)
               if (!column) {
@@ -90,7 +90,7 @@ function useInstance(instance) {
       }
 
       return [filterRows(rows), filteredFlatRows, filteredRowsById]
-    }, [filters, rows, allColumns, userFilterTypes, canFilter])
+    }, [filters, rows, allColumns, userFilterTypes, canFilterRow])
 
   React.useMemo(() => {
     const nonFilteredColumns = allColumns.filter(

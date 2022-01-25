@@ -44,7 +44,7 @@ const defaultGetToggleRowSelectedProps = (props, { instance, row }) => {
       style: {
         cursor: 'pointer'
       },
-      disabled: !row.canSelectRow(),
+      disabled: !row.canSelectRowId(),
       checked
     }
   ]
@@ -68,15 +68,20 @@ const defaultGetToggleAllRowsSelectedProps = (props, { instance }) => [
   }
 ]
 
-function visibleColumns(columns) {
+function visibleColumns(columns, { instance }) {
+  const { multiselect } = instance
   const newColumns = [
-    {
-      id: 'select_',
-      disableDragging: true,
-      disableResizing: true,
-      disableExpand: true,
-      maxWidth: 50
-    },
+    ...(multiselect
+      ? [
+          {
+            id: 'select_',
+            disableDragging: true,
+            disableResizing: true,
+            disableExpand: true,
+            maxWidth: 50
+          }
+        ]
+      : []),
     ...columns
   ]
   return newColumns
@@ -112,15 +117,15 @@ function reducer(state, action, previousState, instance) {
 
     if (selectAll) {
       Object.keys(nonGroupedRowsById).forEach((rowId) => {
-        if (instance.canSelectRow(rowId) && instance.onSelectRow(rowId, true)) {
+        if (instance.canSelectRowId(rowId) && instance.onSelectRowId(rowId, true)) {
           selectedRowIds[rowId] = true
         }
       })
     } else {
       Object.keys(nonGroupedRowsById).forEach((rowId) => {
         if (
-          instance.canSelectRow(rowId) &&
-          instance.onSelectRow(rowId, false)
+          instance.canSelectRowId(rowId) &&
+          instance.onSelectRowId(rowId, false)
         ) {
           delete selectedRowIds[rowId]
         }
@@ -151,11 +156,11 @@ function reducer(state, action, previousState, instance) {
 
       if (!row.isGrouped) {
         if (shouldSelect) {
-          if (instance.canSelectRow(id)) {
+          if (instance.canSelectRowId(id)) {
             selectedRowIds[id] = true
           }
         } else {
-          if (instance.canSelectRow(id)) {
+          if (instance.canSelectRowId(id)) {
             delete selectedRowIds[id]
           }
         }
@@ -166,7 +171,7 @@ function reducer(state, action, previousState, instance) {
       }
     }
 
-    if (instance.onSelectRow(id, shouldSelect)) {
+    if (instance.onSelectRowId(id, shouldSelect)) {
       handleRowById(id)
     }
 
@@ -190,8 +195,8 @@ function useInstance(instance) {
     autoResetSelectedRows = true,
     state: { selectedRowIds },
     dispatch,
-    canSelect = () => true,
-    onSelect = () => true
+    canSelectRow = () => true,
+    onSelectRow = () => true
   } = instance
 
   ensurePluginOrder(
@@ -220,24 +225,24 @@ function useInstance(instance) {
     return selectedFlatRows
   }, [rows, selectedRowIds])
 
-  const onSelectRow = React.useCallback(
+  const onSelectRowId = React.useCallback(
     (id, setSelected) => {
       const row = rowsById[id]
-      return onSelect(row, setSelected)
+      return onSelectRow(row, setSelected)
     },
-    [rowsById, onSelect]
+    [rowsById, onSelectRow]
   )
 
-  const canSelectRow = React.useCallback(
+  const canSelectRowId = React.useCallback(
     (id) => {
       const row = rowsById[id]
       if (row) {
-        return canSelect(row)
+        return canSelectRow(row)
       } else {
         return false
       }
     },
-    [rowsById, canSelect]
+    [rowsById, canSelectRow]
   )
 
   let isAllRowsSelected = Boolean(
@@ -247,7 +252,7 @@ function useInstance(instance) {
   if (isAllRowsSelected) {
     if (
       Object.keys(nonGroupedRowsById).some((id) =>
-        canSelectRow(id) ? !selectedRowIds[id] : false
+        canSelectRowId(id) ? !selectedRowIds[id] : false
       )
     ) {
       isAllRowsSelected = false
@@ -282,8 +287,8 @@ function useInstance(instance) {
   Object.assign(instance, {
     selectedFlatRows,
     isAllRowsSelected,
-    onSelectRow,
-    canSelectRow,
+    onSelectRowId,
+    canSelectRowId,
     toggleRowSelected,
     toggleAllRowsSelected,
     getToggleAllRowsSelectedProps
@@ -292,7 +297,7 @@ function useInstance(instance) {
 
 function prepareRow(row, { instance }) {
   row.toggleRowSelected = (set) => instance.toggleRowSelected(row.id, set)
-  row.canSelectRow = () => instance.canSelectRow(row.id)
+  row.canSelectRowId = () => instance.canSelectRowId(row.id)
 
   row.getToggleRowSelectedProps = makePropGetter(
     instance.getHooks().getToggleRowSelectedProps,

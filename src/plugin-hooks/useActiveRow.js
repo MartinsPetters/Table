@@ -51,7 +51,7 @@ function reducer(state, action, previousState, instance) {
       const newIndex = action.index
       const oldIndex = previousState.activeRowIndex
       const index =
-        newIndex !== oldIndex && instance.onChangeRow(oldIndex)
+        newIndex !== oldIndex && instance.onChangeRowIndex(oldIndex)
           ? newIndex
           : oldIndex
       return {
@@ -66,7 +66,7 @@ function reducer(state, action, previousState, instance) {
       if (prevPageIndex === newPageIndex) {
         return state
       }
-      if (instance.onChangeRow(state.activeRowIndex)) {
+      if (instance.onChangeRowIndex(state.activeRowIndex)) {
         return state
       }
       return {
@@ -81,7 +81,7 @@ function reducer(state, action, previousState, instance) {
       if (prevSortBy === newSortBy) {
         return state
       }
-      if (instance.onChangeRow(state.activeRowIndex)) {
+      if (instance.onChangeRowIndex(state.activeRowIndex)) {
         return state
       }
       return {
@@ -96,7 +96,7 @@ function reducer(state, action, previousState, instance) {
       if (prevFilters === newFilters) {
         return state
       }
-      if (instance.onChangeRow(state.activeRowIndex)) {
+      if (instance.onChangeRowIndex(state.activeRowIndex)) {
         return state
       }
       return {
@@ -119,7 +119,7 @@ function useInstance(instance) {
     autoresetActiveRow = true,
     state: { activeRowIndex },
     dispatch,
-    onChange = () => true
+    onChangeRow = () => true
   } = instance
 
   ensurePluginOrder(
@@ -155,17 +155,17 @@ function useInstance(instance) {
     return id
   }, [page, activeRowIndex, dispatch])
 
-  const onChangeRow = React.useCallback(
+  const onChangeRowIndex = React.useCallback(
     (index) => {
       const row = page[index]
       if (row) {
-        return onChange(row)
+        return onChangeRow(row)
       } else {
         console.log(`No active row found for index ${index}`)
         return true
       }
     },
-    [page, onChange]
+    [page, onChangeRow]
   )
 
   const activateRow = React.useCallback(
@@ -191,7 +191,7 @@ function useInstance(instance) {
     activeRowId,
     activeRowIndex,
     activateRow,
-    onChangeRow,
+    onChangeRowIndex,
     getActiveRowProps
   })
 }

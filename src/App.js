@@ -12,6 +12,7 @@ function App() {
   const table = React.useMemo(
     () => ({
       tableName: 'Table_test',
+      multiselect: true,
       stateReducer: (newState, action, prevState) => {
         console.log('REDUCER', newState, action, prevState)
         return newState
@@ -20,19 +21,23 @@ function App() {
         console.log('CONTROLED STATE', state)
         return state
       },
-      canSelect2: (row) => {
+      canSelectRow: (row) => {
         const { values } = row
         if (values.firstName.indexOf('a') === -1) {
           return false
         }
         return true
       },
-      onSelect: (...props) => {
+      onSelectRow: (...props) => {
         console.log('SELECT ROW', props)
         return true
       },
-      onChange: (...props) => {
+      onChangeRow: (...props) => {
         console.log('ACTIVATE ROW', props)
+        return true
+      },
+      onChangeColumn: (...props) => {
+        console.log('CHANGE COLUMN', props)
         return true
       },
       Tools: (instance) => (

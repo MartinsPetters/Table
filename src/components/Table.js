@@ -89,14 +89,16 @@ export default function Table({
       tableName: 'Table',
       getRowId: (row) => row['id_'],
       getSubRows: (row) => row.subRows,
-      onChange: () => true,
-      onSelect: () => true,
-      canSelect: () => true,
-      canFilter: () => true,      
-      Tools: TableToolbar,
+      onChangeRow: () => true,
+      onSelectRow: () => true,
+      canSelectRow: () => true,
+      canFilterRow: () => true,
+      onChangeColumn: () => {},
       defaultColumn,
       columns: columnsCfg,
+      multiselect: false,
       manualFilters: true,
+      Tools: TableToolbar,
       ...tableCfg
     },
     useFilters, // filter hook
@@ -109,7 +111,7 @@ export default function Table({
     usePagination, // pagination
     useSimpleRowSelect, // select rows
     useActiveRow, //active row
-    useColumnUtilities //active other utilities
+    useColumnUtilities // other utilities
   )
 
   const {

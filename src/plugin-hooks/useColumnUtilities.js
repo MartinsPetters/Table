@@ -41,6 +41,7 @@ function reducer(state, action, previousState, instance) {
       }
     }
     case actions.columnDoneResizing: {
+      instance.onChangeColumn(state, action)
       return {
         ...state,
         isResizing: false
@@ -53,10 +54,27 @@ function reducer(state, action, previousState, instance) {
       }
     }
     case actions.columnDoneDragging: {
+      instance.onChangeColumn(state, action)
       return {
         ...state,
         isDragging: false
       }
+    }
+    case actions.resetHiddenColumns: {
+      instance.onChangeColumn(state, action)
+      return state
+    }
+    case actions.resetColumnOrder: {
+      instance.onChangeColumn(state, action)
+      return state
+    }
+    case actions.setHiddenColumns: {
+      instance.onChangeColumn(state, action)
+      return state
+    }
+    case actions.setColumnOrder: {
+      if (!state.isDragging) instance.onChangeColumn(state, action)
+      return state
     }
     default:
       return state

@@ -14,13 +14,17 @@ const styleTableToolbar = {
   }
 }
 
-export default function TableToolbar({ tableName, state: { selectedRowIds } }) {
+export default function TableToolbar({
+  tableName,
+  multiselect,
+  state: { selectedRowIds }
+}) {
   const selectedCount = React.useMemo(
     () => Object.keys(selectedRowIds).length,
     [selectedRowIds]
   )
   const classes = styleTableToolbar
-  return (
+  return multiselect ? (
     <div
       data-testid={tableName + '_TableToolbar'}
       className={`TableToolbar-root ${css(classes.root)}`}
@@ -33,5 +37,5 @@ export default function TableToolbar({ tableName, state: { selectedRowIds } }) {
         <div />
       )}
     </div>
-  )
+  ) : null
 }
