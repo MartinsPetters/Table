@@ -1,5 +1,4 @@
 import React from 'react'
-import { css } from '@emotion/css'
 
 import TableToolbar from './components/TableToolbar'
 import Table from './components/Table'
