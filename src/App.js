@@ -1,8 +1,6 @@
 import React from 'react'
 
-import TableToolbar from './components/TableToolbar'
-import Table from './components/Table'
-
+import { Table, TableToolbar } from 'nexus-table'
 import CircularJSON from 'circular-json'
 import ReactJson from 'react-json-view'
 import makeData from './makeData'
@@ -11,7 +9,11 @@ function App() {
   const table = React.useMemo(
     () => ({
       tableName: 'Table_test',
-      multiselect: true,
+      disableFilters: false,
+      disableSelect: false,
+      disableExpand: false,
+      disablePagination: false,
+      disableActiveRow: false,
       stateReducer: (newState, action, prevState) => {
         console.log('REDUCER', newState, action, prevState)
         return newState
@@ -59,9 +61,12 @@ function App() {
   const columns = React.useMemo(
     () => [
       {
-        label: 'ID',
         cellType: 'hidden',
         accessor: 'id_'
+      },
+      {
+        label: 'ID',
+        accessor: 'nr'
       },
       {
         accessor: 'firstName',
@@ -77,8 +82,8 @@ function App() {
         accessor: 'age',
         label: 'Age',
         filterType: 'text'
-        //Filter: SliderColumnFilter,
-        //filter: 'text'
+        // Filter: SliderColumnFilter,
+        // filter: 'text'
       },
       {
         accessor: 'visits',
@@ -87,7 +92,7 @@ function App() {
         filterOptions: (rows) => {
           let options = new Set()
           rows.forEach((row) => {
-            options.add(String(row.values['visits']))
+            options.add(String(row.values.visits))
           })
           options = Array.from(options)
           options.sort((firstEl, secondEl) =>
@@ -102,10 +107,10 @@ function App() {
         cellType: 'boolean',
         cellFormat: (value) => (value ? 'Y' : 'N'),
         label: 'Profile Progress'
-        //Header: 'Profile Progress'
-        //Filter: SliderColumnFilter,
-        //filter: filterGreaterThan,
-        //filter: 'text'
+        // Header: 'Profile Progress'
+        // Filter: SliderColumnFilter,
+        // filter: filterGreaterThan,
+        // filter: 'text'
       },
       {
         accessor: 'status',
@@ -114,7 +119,7 @@ function App() {
         filterOptions: (rows) => {
           let options = new Set()
           rows.forEach((row) => {
-            options.add(row.values['status'])
+            options.add(row.values.status)
           })
           options = Array.from(options)
           options.sort((firstEl, secondEl) => (firstEl < secondEl ? -1 : 1))
@@ -129,7 +134,7 @@ function App() {
   const data = React.useMemo(() => makeData(30, 3, 2), [])
 
   const initialState = React.useMemo(() => {
-    let columnOrder = []
+    const columnOrder = []
     columns.reduce((state, col) => {
       state.push(col.accessor || col.id)
       return state

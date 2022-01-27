@@ -10,14 +10,15 @@ const range = (len) => {
 
 let index = 0
 
-const newPerson = () => {
+const newPerson = (parent, idx) => {
   index++
   const statusChance = Math.random()
   return {
     index_: index,
     id_: 'ID' + index,
-    firstName: namor.generate({ words: 1, numbers: 0 }),
-    lastName: namor.generate({ words: 1, numbers: 0 }),
+    nr: `${parent ? parent.nr + '.' : ''}${idx + 1}`,
+    firstName: namor.generate({ words: 1, numbers: 0, saltLength: 0 }),
+    lastName: namor.generate({ words: 1, numbers: 0, saltLength: 0 }),
     age: Math.floor(Math.random() * 30),
     visits: Math.floor(Math.random() * 100),
     progress: Math.random() * 100 > 50,
@@ -31,12 +32,13 @@ const newPerson = () => {
 }
 
 export default function makeData(...lens) {
-  const makeDataLevel = (depth = 0) => {
+  const makeDataLevel = (depth = 0, parent) => {
     const len = lens[depth]
-    return range(len).map((d) => {
+    return range(len).map((d, idx) => {
+      const person = newPerson(parent, idx)
       return {
-        ...newPerson(),
-        subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined
+        ...person,
+        subRows: lens[depth + 1] ? makeDataLevel(depth + 1, person) : undefined
       }
     })
   }
