@@ -13,6 +13,7 @@
     "@material-ui/lab": "^4.0.0-alpha.60",
     "circular-json": "^0.5.9",
     "namor": "^1.1.2",
+    "nexus-table": "^1.2.0",
     "react": "^16.8.6",
     "react-beautiful-dnd": "^13.1.0",
     "react-dom": "^16.8.6",
