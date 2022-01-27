@@ -12,7 +12,7 @@ function App() {
       disableFilters: false,
       disableSelect: false,
       disableExpand: false,
-      disablePagination: false,
+      disablePagination: true,
       disableActiveRow: false,
       stateReducer: (newState, action, prevState) => {
         console.log('REDUCER', newState, action, prevState)
