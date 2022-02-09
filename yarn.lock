@@ -1806,6 +1806,13 @@
     hoist-non-react-statics "^3.3.0"
     redux "^4.0.0"
 
+"@types/react-table@^7.7.9":
+  version "7.7.9"
+  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.7.9.tgz#ea82875775fc6ee71a28408dcc039396ae067c92"
+  integrity sha512-ejP/J20Zlj9VmuLh73YgYkW2xOSFTW39G43rPH93M4mYWdMmqv66lCCr+axZpkdtlNLGjvMG2CwzT4S6abaeGQ==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-transition-group@^4.2.0":
   version "4.4.4"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.4.tgz#acd4cceaa2be6b757db61ed7b432e103242d163e"
@@ -6981,7 +6988,7 @@ mem@^4.0.0:
     mimic-fn "^2.0.0"
     p-is-promise "^2.0.0"
 
-memoize-one@^5.1.1:
+"memoize-one@>=3.1.1 <6", memoize-one@^5.1.1:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/memoize-one/-/memoize-one-5.2.1.tgz#8337aa3c4335581839ec01c3d594090cebe8f00e"
   integrity sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==
@@ -7252,17 +7259,19 @@ neo-async@^2.5.0:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-nexus-table@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/nexus-table/-/nexus-table-1.2.0.tgz#a83c137fd3960e621020153c1240698908aad579"
-  integrity sha512-V1FJqOU//9LLy5GkJOWx7wBsJCehq/5GcJK6B8Ge/clMoXtcBOzM27iPpxIKsot1kYdubuGUbyoAHzwIj05IaQ==
+nexus-table@*:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/nexus-table/-/nexus-table-1.3.0.tgz#eb0d3a80d792ee8b695a7326b47074d446e037a9"
+  integrity sha512-+FWcmQPgCTVdvT2f4pDbCyIUKmeOh5ACF8DnDoC8TNKUAUCdwK/XPaA87Z8X1b3e+RiNkSQbCX3O+yMOrynehw==
   dependencies:
     "@emotion/css" "^11.7.1"
     "@material-ui/core" "^4.12.3"
     "@material-ui/icons" "^4.11.2"
     "@material-ui/lab" "^4.0.0-alpha.60"
+    "@types/react-table" "^7.7.9"
     react-beautiful-dnd "^13.1.0"
     react-table "^7.7.0"
+    react-window "^1.8.6"
 
 nice-try@^1.0.4:
   version "1.0.5"
@@ -9050,6 +9059,14 @@ react-transition-group@^4.4.0:
     dom-helpers "^5.0.1"
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
+
+react-window@^1.8.6:
+  version "1.8.6"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.6.tgz#d011950ac643a994118632665aad0c6382e2a112"
+  integrity sha512-8VwEEYyjz6DCnGBsd+MgkD0KJ2/OXFULyDtorIiTz+QzwoP94tBoA7CnbtyXMm+cCeAUER5KJcPtWl9cpKbOBg==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    memoize-one ">=3.1.1 <6"
 
 react@^16.8.6:
   version "16.14.0"

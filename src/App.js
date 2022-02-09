@@ -14,6 +14,7 @@ function App() {
       disableExpand: false,
       disablePagination: true,
       disableActiveRow: false,
+      getRowId: (row) => row.id_,
       stateReducer: (newState, action, prevState) => {
         console.log('REDUCER', newState, action, prevState)
         return newState
@@ -31,6 +32,10 @@ function App() {
       },
       onSelectRow: (...props) => {
         console.log('SELECT ROW', props)
+        return true
+      },
+      canChangeRow: (...props) => {
+        console.log('CAN ACTIVATE ROW', props)
         return true
       },
       onChangeRow: (...props) => {
@@ -131,7 +136,7 @@ function App() {
     []
   )
 
-  const data = React.useMemo(() => makeData(30, 3, 2), [])
+  const data = React.useMemo(() => makeData(3, 2, 2, 2, 2, 2, 2, 1), [])
 
   const initialState = React.useMemo(() => {
     const columnOrder = []
@@ -139,7 +144,7 @@ function App() {
       state.push(col.accessor || col.id)
       return state
     }, columnOrder)
-    return { columnOrder }
+    return { columnOrder, selectedRowIds: { ID1: true } }
   }, [columns])
 
   return (
